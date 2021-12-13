@@ -4,6 +4,9 @@ const { authenticateUser } = require("../middleware/authenticateUser");
 const { errorCatcher } = require("../middleware/errorCatcher");
 const { User, Course } = require("../models");
 
+/**
+ * retrieves current user data
+ */
 router.get(
   "/",
   authenticateUser,
@@ -17,6 +20,9 @@ router.get(
   })
 );
 
+/**
+ * creates a new user
+ */
 router.post(
   "/",
   authenticateUser,

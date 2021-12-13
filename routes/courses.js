@@ -1,4 +1,3 @@
-const e = require("express");
 const express = require("express");
 const { authenticateUser } = require("../middleware/authenticateUser");
 const { errorCatcher } = require("../middleware/errorCatcher");
@@ -6,6 +5,10 @@ const { User, Course } = require("../models");
 
 const router = express.Router();
 
+// /api/courses
+/**
+ * retrieves all courses with associated user
+ */
 router.get(
   "/",
   errorCatcher(async (req, res) => {
@@ -23,6 +26,9 @@ router.get(
   })
 );
 
+/**
+ * creates a new course
+ */
 router.post(
   "/",
   authenticateUser,
@@ -45,6 +51,9 @@ router.post(
   })
 );
 
+/**
+ * retrieves a single course and associated user
+ */
 router.get(
   "/:id",
   errorCatcher(async (req, res) => {
@@ -67,6 +76,11 @@ router.get(
     }
   })
 );
+
+/**
+ * updates a course if current user is the owner
+ *
+ */
 router.put(
   "/:id",
   authenticateUser,
@@ -89,26 +103,30 @@ router.put(
     }
   })
 );
+
+/**
+ * deletes a course if current user is the owner
+ */
 router.delete(
   "/:id",
   authenticateUser,
   errorCatcher(async (req, res) => {
     const course = await Course.findByPk(req.params.id);
     if (course) {
-        if (course.userId === req.currentUser.id) {
-            await course.destroy();
-            res.status(204);
-            res.end();
-          } else {
-            const error = new Error("Authorization failed");
-            error.status = 401;
-            throw error;
-          }
-    }  else {
-        const error = new Error("Course does not exist");
-        error.status = 400;
+      if (course.userId === req.currentUser.id) {
+        await course.destroy();
+        res.status(204);
+        res.end();
+      } else {
+        const error = new Error("Authorization failed");
+        error.status = 401;
         throw error;
       }
+    } else {
+      const error = new Error("Course does not exist");
+      error.status = 400;
+      throw error;
+    }
   })
 );
 
