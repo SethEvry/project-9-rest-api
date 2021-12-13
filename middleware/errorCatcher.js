@@ -1,0 +1,12 @@
+/**
+ * middleware to handle basic async errors
+ */
+exports.errorCatcher = (cb) => {
+    return async (req, res, next) => {
+      try {
+        await cb(req, res, next);
+      } catch (error) {
+        next(error);
+      }
+    }
+  }

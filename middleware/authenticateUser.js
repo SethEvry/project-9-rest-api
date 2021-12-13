@@ -10,19 +10,18 @@ const bcrypt = require('bcrypt');
     let message;
     const credentials = auth(req);
     if (credentials) {
-      const user = await User.findOne({ where: {emailAddress: credentials.email} });
+      const user = await User.findOne({ where: {emailAddress: credentials.name} });
       if (user) {
         const authenticated = bcrypt
-          .compareSync(credentials.password, user.confirmedPassword);
+        .compareSync(credentials.pass, user.password);
         if (authenticated) {
           console.log(`Authentication successful for email address: ${user.emailAddress}`);
-  
           req.currentUser = user;
         } else {
           message = `Authentication failure for email address: ${user.emailAddress}`;
         }
       } else {
-        message = `User not found for email address: ${credentials.email}`;
+        message = `User not found for email address: ${credentials.name}`;
       }
     } else {
       message = 'Auth header not found';

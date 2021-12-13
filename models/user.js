@@ -1,7 +1,9 @@
 'use strict';
+const bcrypt = require('bcrypt');
 const {
   Model
 } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -15,11 +17,63 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   User.init({
-    firstName: DataTypes.STRING,
-    lastName: DataTypes.STRING,
-    emailAddress: DataTypes.STRING,
-    password: DataTypes.STRING,
-    confirmedPassword: DataTypes.STRING
+    firstName: {
+      type:DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull:{
+          msg: "The user must have a first name"
+        },
+        notEmpty: {
+          msg: "The user must have a first name"
+        }
+      },
+    },
+    lastName: {
+      type:DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull:{
+          msg: "The user must have a last name"
+        },
+        notEmpty: {
+          msg: "The user must have a last name"
+        }
+      },
+    },
+    emailAddress: {
+      type:DataTypes.STRING,
+      allowNull: false,
+      unique: {
+        msg: "A user with that email address already exists"
+      },
+      validate: {
+        notNull:{
+          msg: "The user must have a email address"
+        },
+        notEmpty: {
+          msg: "The user must have a email address"
+        },
+        isEmail: {
+          msg: "The user must have a valid email address"
+        }
+      },
+    },
+    password: {
+      type: DataTypes.STRING,  
+      allowNull: false,
+      set(val) {
+          this.setDataValue('password', bcrypt.hashSync(val, 10));
+      },
+      validate: {
+        notNull: {
+          msg: 'A password is required'
+        },
+        notEmpty: {
+          msg: 'Please provide a password'
+        }
+      }
+    }
   }, {
     sequelize,
     modelName: 'User',
