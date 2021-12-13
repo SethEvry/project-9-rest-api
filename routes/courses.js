@@ -34,7 +34,9 @@ router.post(
   authenticateUser,
   errorCatcher(async (req, res) => {
     try {
-      const body = { ...req.body, userId: req.currentUser.id };
+      // is a userId isn't explicitly set, makes it the id of the current user
+      const userId = req.body.userId ? req.body.userId : req.currentUser.id;
+      const body = { ...req.body, userId };
       const course = await Course.create(body);
       res.redirect(201, `/api/courses/${course.id}`);
     } catch (error) {
