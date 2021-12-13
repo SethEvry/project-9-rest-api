@@ -25,7 +25,14 @@ router.get(
 router.post(
   "/",
   authenticateUser,
-  errorCatcher(async () => {})
+  errorCatcher(async (req, res) => {
+      try{
+        const course = await Course.create(req.body);
+        res.redicrect(201, `/api/courses/${course.id}`)
+      } catch(error) {
+
+      }
+  })
 );
 
 router.get(
