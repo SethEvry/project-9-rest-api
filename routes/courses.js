@@ -10,6 +10,7 @@ router.get(
   "/",
   errorCatcher(async (req, res) => {
     const courses = await Course.findAll({
+      attributes: { exclude: ["createdAt", "updatedAt"] },
       include: [
         {
           model: User,
@@ -26,45 +27,89 @@ router.post(
   "/",
   authenticateUser,
   errorCatcher(async (req, res) => {
-      try{
-        const course = await Course.create(req.body);
-        res.redicrect(201, `/api/courses/${course.id}`)
-      } catch(error) {
-
+    try {
+      const body = { ...req.body, userId: req.currentUser.id };
+      const course = await Course.create(body);
+      res.redirect(201, `/api/courses/${course.id}`);
+    } catch (error) {
+      if (
+        error.name === "SequelizeValidationError" ||
+        error.name === "SequelizeUniqueConstraintError"
+      ) {
+        const errors = error.errors.map((err) => err.message);
+        res.status(400).json({ errors });
+      } else {
+        throw error;
       }
+    }
   })
 );
 
 router.get(
   "/:id",
   errorCatcher(async (req, res) => {
-      const course = await Course.findByPk(req.params.id, {
-        include: [
-          {
-            model: User,
-            as: "user",
-            attributes: ["firstName", "lastName", "emailAddress"],
-          },
-        ],
-      });
-      if(course) {
-          res.status(200).json(course);
-      } else {
-          const error = new Error('Course does not exist');
-          error.status = 400;
-          throw error;
-      }
+    const course = await Course.findByPk(req.params.id, {
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["firstName", "lastName", "emailAddress"],
+        },
+      ],
+    });
+    if (course) {
+      res.status(200).json(course);
+    } else {
+      const error = new Error("Course does not exist");
+      error.status = 400;
+      throw error;
+    }
   })
 );
 router.put(
   "/:id",
   authenticateUser,
-  errorCatcher(async () => {})
+  errorCatcher(async (req, res) => {
+    const course = await Course.findByPk(req.params.id);
+    if (course) {
+      if (course.userId === req.currentUser.id) {
+        await course.update(req.body);
+        res.status(204);
+        res.end();
+      } else {
+        const error = new Error("Authorization failed");
+        error.status = 401;
+        throw error;
+      }
+    } else {
+      const error = new Error("Course does not exist");
+      error.status = 400;
+      throw error;
+    }
+  })
 );
 router.delete(
   "/:id",
   authenticateUser,
-  errorCatcher(async () => {})
+  errorCatcher(async (req, res) => {
+    const course = await Course.findByPk(req.params.id);
+    if (course) {
+        if (course.userId === req.currentUser.id) {
+            await course.destroy();
+            res.status(204);
+            res.end();
+          } else {
+            const error = new Error("Authorization failed");
+            error.status = 401;
+            throw error;
+          }
+    }  else {
+        const error = new Error("Course does not exist");
+        error.status = 400;
+        throw error;
+      }
+  })
 );
 
 module.exports = router;
