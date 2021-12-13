@@ -1,3 +1,4 @@
+const e = require("express");
 const express = require("express");
 const { authenticateUser } = require("../middleware/authenticateUser");
 const { errorCatcher } = require("../middleware/errorCatcher");
@@ -29,7 +30,24 @@ router.post(
 
 router.get(
   "/:id",
-  errorCatcher(async () => {})
+  errorCatcher(async (req, res) => {
+      const course = await Course.findByPk(req.params.id, {
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["firstName", "lastName", "emailAddress"],
+          },
+        ],
+      });
+      if(course) {
+          res.status(200).json(course);
+      } else {
+          const error = new Error('Course does not exist');
+          error.status = 400;
+          throw error;
+      }
+  })
 );
 router.put(
   "/:id",
