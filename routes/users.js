@@ -25,7 +25,6 @@ router.get(
  */
 router.post(
   "/",
-  authenticateUser,
   errorCatcher(async (req, res) => {
     try {
       await User.create(req.body);
