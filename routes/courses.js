@@ -87,21 +87,33 @@ router.put(
   "/:id",
   authenticateUser,
   errorCatcher(async (req, res) => {
-    const course = await Course.findByPk(req.params.id);
-    if (course) {
-      if (course.userId === req.currentUser.id) {
-        await course.update(req.body);
-        res.status(204);
-        res.end();
+    try {
+      const course = await Course.findByPk(req.params.id);
+      if (course) {
+        if (course.userId === req.currentUser.id) {
+          await course.update(req.body);
+          res.status(204);
+          res.end();
+        } else {
+          const error = new Error("Authorization failed");
+          error.status = 401;
+          throw error;
+        }
       } else {
-        const error = new Error("Authorization failed");
-        error.status = 401;
+        const error = new Error("Course does not exist");
+        error.status = 400;
         throw error;
       }
-    } else {
-      const error = new Error("Course does not exist");
-      error.status = 400;
-      throw error;
+    } catch (error) {
+      if (
+        error.name === "SequelizeValidationError" ||
+        error.name === "SequelizeUniqueConstraintError"
+      ) {
+        const errors = error.errors.map((err) => err.message);
+        res.status(400).json({ errors });
+      } else {
+        throw error;
+      }
     }
   })
 );
