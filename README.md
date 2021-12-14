@@ -2,13 +2,12 @@
 
 ## Authorization
 
-### Routes that require *Basic Authorization*
+### Routes that require *Basic Authentication*
 
 #### GET
   - /users
   
 #### POST  
-- /users
 - /courses
 
 #### PUT
